@@ -1,71 +1,93 @@
-import React, { useEffect, useState } from 'react'
-import './Data.css'
+import React, { useEffect, useState } from 'react';
+import './Data.css';
 const Data = () => {
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [triggerSearch, setTriggerSearch] = useState(false);
 
+  const fetchData = async () => {
+    const url = `https://api.api-ninjas.com/v1/exercises?muscle=${search}`;
+    const apiKey = import.meta.env.VITE_API_KEY;
 
-
-  const [data,setdata]=useState([]);
-  const [error,seterror]=useState(null);  
-  const [loding,setloding]=useState(true);
-  const fetchdata=async()=> {
-    const url="https://api.api-ninjas.com/v1/exercises?muscle=triceps";
-    const apiKey="DVy84wX0nxAr2ngHGoVK5w==FA5rgxELE6u48VtS";
-    setdata(true);
+    setLoading(true);
     try {
-      const responce=await  fetch(url,{
-        method:'GET',
-        headers:{
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
           'X-Api-Key': apiKey,
-          'Content-Type': 'application/json'
-        }
-      })
-      if(!responce.ok) {
-        throw new Error("Netwoek error....")
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Network error...");
       }
-  
-      const results=await responce.json();
-      setdata(results);
-      setloding(false);
+      const results = await response.json();
+      setData(results);
+      setLoading(false);
     } catch (error) {
-      seterror(error.message);
-      setloding(false);
+      setError(error.message);
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(()=>{
-    fetchdata()
-  },[])
+  const handleSearch = (evt) => {
+    setSearch(evt.target.value);
+  };
+
+  const handleSearchClick = () => {
+    setTriggerSearch(true);
+  };
+
+  useEffect(() => {
+    if (triggerSearch) {
+      fetchData();
+      setTriggerSearch(false);
+    }
+  }, [triggerSearch]);
+
   return (
-   <div>
-    <div >
-      <input type="search" name="" placeholder='search here...' id="" />
-      <button>search</button>
-    </div>
-    <div className='card'>
-    <div >
-     {loding && <h1>Loding....</h1>}
-    </div>
     <div>
-      {error && <h1>{error}</h1>}
-    </div>
-    <div >
-      {!loding && !error && data.map((eachobj,index)=>{
-        const{name,type,equipment,difficulty,instructions}=eachobj;
-        return(
-          <div key={index}>
-            <h1>{name}</h1>
-            <h3>{type}</h3>
-            <h4>{equipment}</h4>
-            <h5>{difficulty}</h5>
-            <p>{instructions}</p>
+      <div className="searchbar">
+        <input
+          type="search"
+          placeholder="Search here..."
+          value={search}
+          onChange={handleSearch}
+        />
+        <button onClick={handleSearchClick}>Search</button>
+      </div>
+      {!triggerSearch && !loading && !error && !data.length ? (
+        <div id="heading">
+          <h1>Welcome...</h1>
+        </div>
+      ) : (
+        <div>
+          {loading && <h1>Loading...</h1>}
+          {error && <h1>{error}</h1>}
+          <div className="card">
+            {!loading && !error && data.map((exercise, index) => (
+              <div key={index}>
+                <div id="nametype">
+                  <h2>Name: {exercise.name}</h2>
+                  <h3>Type: {exercise.type}</h3>
+                </div>
+                <div id="equipmentdifficulty">
+                  <h4>Equipment: {exercise.equipment}</h4>
+                  <h4>Difficulty: {exercise.difficulty}</h4>
+                </div>
+                <div className="instructions">
+                  <h1>Instructions</h1>
+                  <p>{exercise.instructions}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        )
-      })}
+        </div>
+      )}
     </div>
-    </div>
-   </div>
-    
-  )
-}
+  );
+};
 
-export default Data
+export default Data;
